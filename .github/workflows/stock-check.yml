@@ -28,7 +28,7 @@ jobs:
           echo "result=$result" >> $GITHUB_ENV
 
       - name: Commit if in stock
-        if: env.result != '입고'
+        if: env.result == '입고'
         run: |
           echo "Nimbus 26 in stock at $(date)" >> stock_log.txt
           git config user.name "github-actions"
