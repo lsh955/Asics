@@ -30,36 +30,6 @@ jobs:
       - name: Commit if in stock
         if: env.result == '입고'
         name: Stock Check
-
-on:
-  schedule:
-    - cron: "*/30 * * * *"   # 30분마다 실행
-  workflow_dispatch:
-
-jobs:
-  check-stock:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4
-
-      - name: Run stock checker
-        id: stock
-        run: |
-          result=$(python monitor_nimbus26.py)
-          echo "result=$result" >> $GITHUB_ENV
-
-      - name: Commit if in stock
-        if: env.result == '입고'
         run: |
           if [ "${{ env.result }}" == "입고" ]; then
             MESSAGE="✅ 재고 입고 알림: Nimbus 26 상품이 입고되었습니다! 확인해보세요."
