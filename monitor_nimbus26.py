@@ -14,9 +14,9 @@ def check_stock():
         soup = BeautifulSoup(resp.text, "html.parser")
 
         if TARGET_TEXT in soup.get_text():
-            print("OUT_OF_STOCK")
+            print("품절")
         else:
-            print("IN_STOCK")
+            print("입고")
     except Exception as e:
         print(f"ERROR: {e}")
 
