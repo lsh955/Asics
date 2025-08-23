@@ -1,0 +1,15 @@
+name: Nimbus 26 재고 입고 알림! 🔔
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'stock_log.txt'
+
+jobs:
+  notify-on-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send a notification
+        run: echo "재고 입고가 확인되었습니다! 깃허브 앱으로 알림이 갈 거예요."
