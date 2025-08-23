@@ -1,0 +1,37 @@
+name: Stock Check
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # 30분마다 실행
+  workflow_dispatch:
+
+jobs:
+  check-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run stock checker
+        id: stock
+        run: |
+          result=$(python monitor_nimbus26.py)
+          echo "result=$result" >> $GITHUB_ENV
+
+      - name: Commit if in stock
+        if: env.result == 'IN_STOCK'
+        run: |
+          echo "Nimbus 26 in stock at $(date)" >> stock_log.txt
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add stock_log.txt
+          git commit -m "Stock available at $(date)"
+          git push
