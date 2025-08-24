@@ -24,7 +24,7 @@ jobs:
       - name: Run stock checker
         id: stock
         run: |
-          result=$(python monitor_nimbus26.py)
+          result=$(python monitor_nimbus26.py || echo "에러")
           echo "result=$result" >> $GITHUB_ENV
 
       - name: Commit if in stock
@@ -36,3 +36,17 @@ jobs:
           git add stock_log.txt
           git commit -m "Stock available at $(date)"
           git push
+
+      - name: Send Slack Notification
+        run: |
+          if [ "${{ env.result }}" = "입고" ]; then
+            message="✅ Nimbus 26 재고 입고됨!"
+          elif [ "${{ env.result }}" = "품절" ]; then
+            message="❌ Nimbus 26 품절 상태"
+          else
+            message="⚠️ 모니터링 문제 발생 (스크립트 에러 가능)"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$message\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
