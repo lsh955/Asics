@@ -30,9 +30,6 @@ jobs:
       - name: Commit if in stock
         if: ${{ env.result == '입고' }}
         run: |
-          echo "Nimbus 26 in stock at $(date)" >> stock_log.txt
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add stock_log.txt
-          git commit -m "Stock available at $(date)"
-          git push
+          if [ "$RESULT" = "입고" ]; then
+            gh workflow run notify.yml
+          fi
