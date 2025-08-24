@@ -13,19 +13,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 lxml
 
       - name: Run stock checker
         id: stock
         run: |
-          result=$(python monitor_nimbus26.py || echo "에러")
+          result=$(python monitor_nimbus26.py || echo "모니터링 문제")
+          # 개행/공백 제거하여 정확 비교
+          result=$(echo "$result" | tr -d '\r' | tr -d '\n' | xargs)
           echo "result=$result" >> $GITHUB_ENV
+          echo "Result => [$result]"
+          # 디버그 파일도 로그에 표시(필요 시 확인)
+          if [ -f last_check_debug.txt ]; then
+            echo "--- last_check_debug.txt ---"
+            cat last_check_debug.txt || true
+            echo "----------------------------"
+          fi
 
       - name: Commit if in stock
         if: ${{ env.result == '입고' }}
@@ -38,15 +48,27 @@ jobs:
           git push
 
       - name: Send Slack Notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          if [ "${{ env.result }}" = "입고" ]; then
-            message="✅ Nimbus 26 재고 입고됨!"
-          elif [ "${{ env.result }}" = "품절" ]; then
-            message="❌ Nimbus 26 품절 상태"
-          else
-            message="⚠️ 모니터링 문제 발생 (스크립트 에러 가능)"
+          # Webhook 미설정 시 건너뛰기
+          WEBHOOK="${SLACK_WEBHOOK_URL:-}"
+          if [ -z "$WEBHOOK" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL not set. Skip Slack."
+            exit 0
           fi
 
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"$message\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+          case "${{ env.result }}" in
+            "입고")
+              message="✅ Nimbus 26(2E) 재고 '입고' 감지"
+              ;;
+            "품절")
+              message="❌ 현재 '품절' 상태"
+              ;;
+            *)
+              message="⚠️ 모니터링 문제 발생 (스크립트/차단/네트워크). result='${{ env.result }}'"
+              ;;
+          esac
+
+          payload=$(printf '{"text":"%s"}' "$message")
+          curl -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK"
