@@ -3,8 +3,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-MOBILE_URL = os.getenv("TARGET_URL",  "https://m.asics.co.kr/p/AKR_122532006-001")
-DESKTOP_URL = os.getenv("FALLBACK_URL","https://asics.co.kr/p/AKR_122532006-001")
+MOBILE_URL = os.getenv("TARGET_URL",  "https://m.asics.co.kr/p/AKR_112430207-002")
+DESKTOP_URL = os.getenv("FALLBACK_URL","https://asics.co.kr/p/AKR_112430207-002")
 
 HEADERS = {
     "User-Agent": (
